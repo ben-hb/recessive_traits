@@ -71,13 +71,14 @@ orig <- orig %>%
 # anticipated salary after graduation
   
 change_salary <- orig %>% 
-    select(recess_change_d,
+    select(gender_d,
+           recess_change_d,
            ideal_anticip_salary) %>% 
-    filter(!is.na(recess_change_d),
+    filter(!is.na(gender_d),
+           !is.na(recess_change_d),
            !is.na(ideal_anticip_salary))
 
-cor(change_salary$recess_change_d, change_salary$ideal_anticip_salary)
+linear_mod <- lm(recess_change_d ~ ideal_anticip_salary * gender_d, data = change_salary)
 
-linear_mod <- lm(recess_change_d ~ ideal_anticip_salary, data = change_salary)
 summary(linear_mod)
 
