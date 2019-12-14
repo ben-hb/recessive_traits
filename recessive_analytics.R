@@ -1,5 +1,7 @@
 library(tidyverse)
 library(janitor)
+library(gt)
+library(clipr)
 
 ##### Importing ######
 
@@ -57,13 +59,21 @@ orig <- orig %>%
   # Converting string numeric values to integers. Ranges recoded as means and
   # boundless values recoded as floors
   
-  orig$ideal_anticip_salary = orig$ideal_anticip_salary %>% 
+  orig$ideal_anticip_salary <- orig$ideal_anticip_salary %>% 
     recode(`$20k-$40k` = 30000, 
          `$61k-80k` = 70000, 
          `$101k-150k` = 125000, 
          `$151k-200k` = 175000, 
          `$200k+` = 200000, 
          `$41k-60k` = 50000)
+  
+  orig$family_income <- orig$family_income %>% 
+    recode(`Over $500k` = 500000,
+           `Between $80k and $125k` = 102500,
+           `Below $40k` = 40000,
+           `Between $250k and $500k` = 375000,
+           `Between $125k and $250k` = 187500,
+           `Between $40k and $80k` = 60000)
   
 ###### Analysis ######
   
@@ -81,4 +91,43 @@ change_salary <- orig %>%
 linear_mod <- lm(recess_change_d ~ ideal_anticip_salary * gender_d, data = change_salary)
 
 summary(linear_mod)
+
+# Graduation year breakdown
+
+orig %>% 
+  group_by(anticip_grad) %>% 
+  count() %>% 
+  filter(!is.na(anticip_grad)) %>% 
+  ungroup() %>% 
+  mutate(total = sum(n)) %>% 
+  mutate(freq = n / total) %>% 
+  select(`Graduation Year` = anticip_grad,
+         `Proportion of Respondents` = freq) %>% 
+  gt() %>% 
+  tab_header(
+    title = "Proportion of Respondents by Expected Graduation Year",
+    subtitle = "First-Years and Fourth-Years Overrepresented"
+  ) %>% 
+  fmt_percent(vars(`Proportion of Respondents`))
+
+# Gender Breakdown
+
+orig %>% 
+  group_by(gender) %>% 
+  count() %>% 
+  filter(!is.na(gender)) %>% 
+  ungroup() %>% 
+  mutate(total = sum(n)) %>% 
+  mutate(freq = n / total) %>% 
+  select(`Gender` = gender,
+         `Proportion of Respondents` = freq) %>% 
+  gt() %>% 
+  tab_header(
+    title = "Proportion of Respondents by Gender Identification",
+    subtitle = "Women Overrepresented"
+  ) %>% 
+  fmt_percent(vars(`Proportion of Respondents`))
+
+
+
 
